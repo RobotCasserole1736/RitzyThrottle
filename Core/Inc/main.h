@@ -64,8 +64,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define CTRL_A_Pin GPIO_PIN_0
 #define CTRL_A_GPIO_Port GPIOC
+#define CTRL_A_EXTI_IRQn EXTI0_IRQn
 #define CTRL_B_Pin GPIO_PIN_1
 #define CTRL_B_GPIO_Port GPIOC
+#define CTRL_B_EXTI_IRQn EXTI1_IRQn
 #define CTRL_SW_Pin GPIO_PIN_2
 #define CTRL_SW_GPIO_Port GPIOC
 #define PWM_OUT_Pin GPIO_PIN_0

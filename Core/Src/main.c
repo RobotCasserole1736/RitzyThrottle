@@ -65,7 +65,7 @@ static void MX_TIM2_Init(void);
 #define SEG_OFF GPIO_PIN_SET
 
 uint8_t curDigitIdx = 0;
-double curOutputVal = 123.4;
+double curOutputVal = 0.0;
 
 char valToDigit(uint8_t idx, double val){
 	int shownVal = round(val);
@@ -243,6 +243,44 @@ void writeDigit(uint8_t idx, char val, bool hasDP){
 
 }
 
+int8_t prevState = 0;
+uint32_t prevIntTime = 0;
+//from https://cdn.sparkfun.com/datasheets/Robotics/How%20to%20use%20a%20quadrature%20encoder.pdf
+static int8_t QEM[16] = {0,-1,1,0,1,0,0,-1,-1,0,0,1,0,1,-1,0};
+
+//interrupt handler for dial
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	uint32_t curIntTime = HAL_GetTick();
+	bool pinA = HAL_GPIO_ReadPin(CTRL_A_GPIO_Port, CTRL_A_Pin) == GPIO_PIN_RESET;
+	bool pinB = HAL_GPIO_ReadPin(CTRL_B_GPIO_Port, CTRL_B_Pin) == GPIO_PIN_RESET;
+	int8_t curState =  pinA?2:0 + pinB?1:0;
+
+	if(curState != prevState){
+		double interruptPeriod_ms = curIntTime - prevIntTime;
+		int8_t adj = QEM[prevState*4 + curState];
+
+		if(interruptPeriod_ms < 10.0){
+			interruptPeriod_ms = 10.0;
+		}
+		double adjFactor = 100.0 / interruptPeriod_ms;
+		if(adjFactor < 1.0){
+			adjFactor = 1.0;
+		}
+
+		curOutputVal += ((double)adj) * adjFactor;
+
+		if(curOutputVal > 100.0){
+			curOutputVal = 100.0;
+		} else if (curOutputVal < -100.0){
+			curOutputVal = -100.0;
+		}
+		prevState = curState;
+		prevIntTime = curIntTime;
+	}
+
+
+}
+
 
 /* USER CODE END 0 */
 
@@ -277,7 +315,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -293,6 +331,12 @@ int main(void)
 	  // Handle run switch
 	  GPIO_PinState runSwitchState = HAL_GPIO_ReadPin(RUN_SW_GPIO_Port, RUN_SW_Pin);
 	  bool shouldRun = runSwitchState==GPIO_PIN_RESET;
+
+	  if(shouldRun){
+		  TIM2->CCR1 = round(1600000.0 * (0.0015 + 0.0005 * curOutputVal/100.0));
+	  } else {
+		  TIM2->CCR1 = 0;
+	  }
 
 	  //handle display outputs
 	  writeDigit(curDigitIdx, valToDigit(curDigitIdx, curOutputVal), shouldRun);
@@ -364,9 +408,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
+  htim2.Init.Prescaler = 10;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 65535;
+  htim2.Init.Period = 32000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -463,7 +507,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : CTRL_A_Pin CTRL_B_Pin */
   GPIO_InitStruct.Pin = CTRL_A_Pin|CTRL_B_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
@@ -501,6 +545,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(RUN_SW_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
 }
 

@@ -65,10 +65,12 @@ static void MX_TIM2_Init(void);
 #define SEG_OFF GPIO_PIN_SET
 
 uint8_t curDigitIdx = 0;
+double curOutputVal = 123.4;
 
 char valToDigit(uint8_t idx, double val){
 	int shownVal = round(val);
 	int shownMag = abs(shownVal);
+	int tmp =0;
 
 
 	if(shownVal > 100){
@@ -88,7 +90,7 @@ char valToDigit(uint8_t idx, double val){
 	break;
 	case 2:
 		if(shownMag >= 100){
-			int tmp = shownMag % 1000;
+			tmp = shownMag % 1000;
 			tmp = tmp / 100;
 		    return floor(tmp) + '0';
 		} else {
@@ -97,7 +99,7 @@ char valToDigit(uint8_t idx, double val){
 	break;
 	case 1:
 		if(shownMag >= 10){
-			int tmp = shownMag % 100;
+			tmp = shownMag % 100;
 			tmp = tmp / 10;
 		    return floor(tmp) + '0';
 		} else {
@@ -105,7 +107,7 @@ char valToDigit(uint8_t idx, double val){
 		}
 	break;
 	case 0:
-		int tmp = shownMag % 10;
+		tmp = shownMag % 10;
 	    return floor(tmp) + '0';
 	break;
 	default:
@@ -118,10 +120,10 @@ char valToDigit(uint8_t idx, double val){
 void writeDigit(uint8_t idx, char val, bool hasDP){
 
 	//Select the digit source line. SET provides power to the digit, RESET removes power
-	HAL_GPIO_WritePin(LED_V0_GPIO_Port, LED_V0_Pin, (idx == 0) ? DIGIT_ON:DIGIT_OFF);
-	HAL_GPIO_WritePin(LED_V1_GPIO_Port, LED_V1_Pin, (idx == 1) ? DIGIT_ON:DIGIT_OFF);
+	HAL_GPIO_WritePin(LED_V1_GPIO_Port, LED_V1_Pin, (idx == 3) ? DIGIT_ON:DIGIT_OFF);
 	HAL_GPIO_WritePin(LED_V2_GPIO_Port, LED_V2_Pin, (idx == 2) ? DIGIT_ON:DIGIT_OFF);
-	HAL_GPIO_WritePin(LED_V3_GPIO_Port, LED_V3_Pin, (idx == 3) ? DIGIT_ON:DIGIT_OFF);
+	HAL_GPIO_WritePin(LED_V3_GPIO_Port, LED_V3_Pin, (idx == 1) ? DIGIT_ON:DIGIT_OFF);
+	HAL_GPIO_WritePin(LED_V4_GPIO_Port, LED_V4_Pin, (idx == 0) ? DIGIT_ON:DIGIT_OFF);
 
 	// Always switch dp
 	HAL_GPIO_WritePin(LED_DP_GPIO_Port, LED_DP_Pin, hasDP?SEG_ON:SEG_OFF);
@@ -140,11 +142,11 @@ void writeDigit(uint8_t idx, char val, bool hasDP){
 		  break;
 		case '1':
 		  HAL_GPIO_WritePin(LED_A_GPIO_Port, LED_A_Pin, SEG_OFF);
-		  HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, SEG_OFF);
-		  HAL_GPIO_WritePin(LED_C_GPIO_Port, LED_C_Pin, SEG_OFF);
+		  HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, SEG_ON);
+		  HAL_GPIO_WritePin(LED_C_GPIO_Port, LED_C_Pin, SEG_ON);
 		  HAL_GPIO_WritePin(LED_D_GPIO_Port, LED_D_Pin, SEG_OFF);
-		  HAL_GPIO_WritePin(LED_E_GPIO_Port, LED_E_Pin, SEG_ON);
-		  HAL_GPIO_WritePin(LED_F_GPIO_Port, LED_F_Pin, SEG_ON);
+		  HAL_GPIO_WritePin(LED_E_GPIO_Port, LED_E_Pin, SEG_OFF);
+		  HAL_GPIO_WritePin(LED_F_GPIO_Port, LED_F_Pin, SEG_OFF);
 		  HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, SEG_OFF);
 		  break;
 		case '2':
@@ -214,7 +216,16 @@ void writeDigit(uint8_t idx, char val, bool hasDP){
 		  HAL_GPIO_WritePin(LED_A_GPIO_Port, LED_A_Pin, SEG_ON);
 		  HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, SEG_ON);
 		  HAL_GPIO_WritePin(LED_C_GPIO_Port, LED_C_Pin, SEG_ON);
-		  HAL_GPIO_WritePin(LED_D_GPIO_Port, LED_D_Pin, SEG_ON);
+		  HAL_GPIO_WritePin(LED_D_GPIO_Port, LED_D_Pin, SEG_OFF);
+		  HAL_GPIO_WritePin(LED_E_GPIO_Port, LED_E_Pin, SEG_OFF);
+		  HAL_GPIO_WritePin(LED_F_GPIO_Port, LED_F_Pin, SEG_ON);
+		  HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, SEG_ON);
+		  break;
+		case '-':
+		  HAL_GPIO_WritePin(LED_A_GPIO_Port, LED_A_Pin, SEG_OFF);
+		  HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, SEG_OFF);
+		  HAL_GPIO_WritePin(LED_C_GPIO_Port, LED_C_Pin, SEG_OFF);
+		  HAL_GPIO_WritePin(LED_D_GPIO_Port, LED_D_Pin, SEG_OFF);
 		  HAL_GPIO_WritePin(LED_E_GPIO_Port, LED_E_Pin, SEG_OFF);
 		  HAL_GPIO_WritePin(LED_F_GPIO_Port, LED_F_Pin, SEG_OFF);
 		  HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, SEG_ON);
@@ -273,7 +284,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	  writeDigit(curDigitIdx, valToDigit(curDigitIdx, curOutputVal), false);
+	  curDigitIdx = (curDigitIdx + 1)%4;
 	  HAL_Delay(5); //world's worst rtos
     /* USER CODE END WHILE */
 

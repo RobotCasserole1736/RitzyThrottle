@@ -34,6 +34,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

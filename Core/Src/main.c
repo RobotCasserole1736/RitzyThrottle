@@ -284,7 +284,18 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  writeDigit(curDigitIdx, valToDigit(curDigitIdx, curOutputVal), false);
+	  //Handle value reset
+	  GPIO_PinState ctrlSwitchState = HAL_GPIO_ReadPin(CTRL_SW_GPIO_Port, CTRL_SW_Pin);
+	  if(ctrlSwitchState==GPIO_PIN_RESET){
+		  curOutputVal = 0.0;
+	  }
+
+	  // Handle run switch
+	  GPIO_PinState runSwitchState = HAL_GPIO_ReadPin(RUN_SW_GPIO_Port, RUN_SW_Pin);
+	  bool shouldRun = runSwitchState==GPIO_PIN_RESET;
+
+	  //handle display outputs
+	  writeDigit(curDigitIdx, valToDigit(curDigitIdx, curOutputVal), shouldRun);
 	  curDigitIdx = (curDigitIdx + 1)%4;
 	  HAL_Delay(5); //world's worst rtos
     /* USER CODE END WHILE */

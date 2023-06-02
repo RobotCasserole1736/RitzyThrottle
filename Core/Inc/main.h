@@ -68,8 +68,6 @@ void Error_Handler(void);
 #define CTRL_B_Pin GPIO_PIN_1
 #define CTRL_B_GPIO_Port GPIOC
 #define CTRL_B_EXTI_IRQn EXTI1_IRQn
-#define CTRL_SW_Pin GPIO_PIN_2
-#define CTRL_SW_GPIO_Port GPIOC
 #define PWM_OUT_Pin GPIO_PIN_0
 #define PWM_OUT_GPIO_Port GPIOA
 #define LED_B_Pin GPIO_PIN_4
@@ -88,8 +86,6 @@ void Error_Handler(void);
 #define LED_DP_GPIO_Port GPIOB
 #define LED_D_Pin GPIO_PIN_1
 #define LED_D_GPIO_Port GPIOB
-#define LED_E_Pin GPIO_PIN_2
-#define LED_E_GPIO_Port GPIOB
 #define LED_F_Pin GPIO_PIN_10
 #define LED_F_GPIO_Port GPIOB
 #define LED_A_Pin GPIO_PIN_12

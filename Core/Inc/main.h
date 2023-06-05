@@ -68,32 +68,12 @@ void Error_Handler(void);
 #define CTRL_B_Pin GPIO_PIN_1
 #define CTRL_B_GPIO_Port GPIOC
 #define CTRL_B_EXTI_IRQn EXTI1_IRQn
-#define PWM_OUT_Pin GPIO_PIN_0
-#define PWM_OUT_GPIO_Port GPIOA
-#define LED_B_Pin GPIO_PIN_4
-#define LED_B_GPIO_Port GPIOA
-#define LED_V3_Pin GPIO_PIN_5
-#define LED_V3_GPIO_Port GPIOA
-#define LED_V2_Pin GPIO_PIN_6
-#define LED_V2_GPIO_Port GPIOA
-#define LED_V4_Pin GPIO_PIN_7
-#define LED_V4_GPIO_Port GPIOA
-#define LED_G_Pin GPIO_PIN_4
-#define LED_G_GPIO_Port GPIOC
-#define LED_C_Pin GPIO_PIN_5
-#define LED_C_GPIO_Port GPIOC
-#define LED_DP_Pin GPIO_PIN_0
-#define LED_DP_GPIO_Port GPIOB
-#define LED_D_Pin GPIO_PIN_1
-#define LED_D_GPIO_Port GPIOB
-#define LED_F_Pin GPIO_PIN_10
-#define LED_F_GPIO_Port GPIOB
-#define LED_A_Pin GPIO_PIN_12
-#define LED_A_GPIO_Port GPIOB
-#define LED_V1_Pin GPIO_PIN_13
-#define LED_V1_GPIO_Port GPIOB
+#define CTRL_SW_Pin GPIO_PIN_2
+#define CTRL_SW_GPIO_Port GPIOC
 #define RUN_SW_Pin GPIO_PIN_14
 #define RUN_SW_GPIO_Port GPIOB
+#define PWM_OUT_Pin GPIO_PIN_15
+#define PWM_OUT_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

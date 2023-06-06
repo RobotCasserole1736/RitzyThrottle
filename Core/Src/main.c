@@ -333,7 +333,7 @@ int main(void)
 	  bool shouldRun = runSwitchState==GPIO_PIN_RESET;
 
 	  if(shouldRun){
-		  TIM2->CCR1 = round(1600000.0 * (0.0015 + 0.0005 * curOutputVal/100.0));
+		  TIM2->CCR1 = round(8300.0 * (1.5 + 0.5 * curOutputVal/100.0)); //CMG - I have exactly zero clue how theses conversion factors work. 8300 is magic
 	  } else {
 		  TIM2->CCR1 = 0;
 	  }
@@ -408,9 +408,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 10;
+  htim2.Init.Prescaler = 1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 32000;
+  htim2.Init.Period = 160000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)

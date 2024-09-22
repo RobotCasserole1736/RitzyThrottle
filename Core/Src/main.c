@@ -247,36 +247,65 @@ int8_t prevState = 0;
 uint32_t prevIntTime = 0;
 //from https://cdn.sparkfun.com/datasheets/Robotics/How%20to%20use%20a%20quadrature%20encoder.pdf
 static int8_t QEM[16] = {0,-1,1,0,1,0,0,-1,-1,0,0,1,0,1,-1,0};
+uint8_t preventZeroCrossing = 0;
+
+
+bool pinAVal = false;
+uint32_t pinAChangeTime = 0;
+bool pinBVal = false;
+uint32_t pinBChangeTime = 0;
 
 //interrupt handler for dial
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	uint32_t curIntTime = HAL_GetTick();
-	bool pinA = HAL_GPIO_ReadPin(CTRL_A_GPIO_Port, CTRL_A_Pin) == GPIO_PIN_RESET;
-	bool pinB = HAL_GPIO_ReadPin(CTRL_B_GPIO_Port, CTRL_B_Pin) == GPIO_PIN_RESET;
-	int8_t curState =  pinA?2:0 + pinB?1:0;
+
+	bool pinAVal = HAL_GPIO_ReadPin(CTRL_A_GPIO_Port, CTRL_A_Pin) == GPIO_PIN_RESET;
+	bool pinBVal = HAL_GPIO_ReadPin(CTRL_B_GPIO_Port, CTRL_B_Pin) == GPIO_PIN_RESET;
+
+	int8_t curState =  pinAVal?2:0 + pinBVal?1:0;
+
+	double interruptPeriod_ms = curIntTime - prevIntTime;
+
+	int8_t adj = 0.0;
 
 	if(curState != prevState){
-		double interruptPeriod_ms = curIntTime - prevIntTime;
-		int8_t adj = QEM[prevState*4 + curState];
-
-		if(interruptPeriod_ms < 10.0){
-			interruptPeriod_ms = 10.0;
-		}
-		double adjFactor = 100.0 / interruptPeriod_ms;
-		if(adjFactor < 1.0){
-			adjFactor = 1.0;
-		}
-
-		curOutputVal += ((double)adj) * adjFactor;
-
-		if(curOutputVal > 100.0){
-			curOutputVal = 100.0;
-		} else if (curOutputVal < -100.0){
-			curOutputVal = -100.0;
-		}
-		prevState = curState;
-		prevIntTime = curIntTime;
+		adj = QEM[prevState*4 + curState];
 	}
+
+	double prevOutputVal = curOutputVal;
+
+	// Apply delta to channel
+	curOutputVal += ((double)adj) ;
+
+	// Limit min/max
+	if(curOutputVal > 100.0){
+		curOutputVal = 100.0;
+	} else if (curOutputVal < -100.0){
+		curOutputVal = -100.0;
+	}
+
+	//The v2 board doesn't have a center press button, so also stop at zero if the dial is spun quickly
+	if(interruptPeriod_ms < 150.0){
+		preventZeroCrossing = 1;
+	} else if(interruptPeriod_ms > 300.0){
+		preventZeroCrossing = 0;
+	}
+
+	if(preventZeroCrossing){
+
+		if(prevOutputVal >= 0.0 && curOutputVal < 0.0){
+			curOutputVal = 0.0;
+		}
+
+		if(prevOutputVal <= 0.0 && curOutputVal > 0.0){
+			curOutputVal = 0.0;
+		}
+
+	}
+
+	prevState = curState;
+	prevIntTime = curIntTime;
+
 
 
 }
@@ -410,7 +439,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 320000;
+  htim2.Init.Period = 80000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
